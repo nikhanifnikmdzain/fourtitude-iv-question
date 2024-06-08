@@ -1,11 +1,19 @@
 package asia.fourtitude.interviewq.jumble.core;
 
 import java.io.*;
+import java.lang.System.Logger;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.io.PrintStream;
 
 public class JumbleEngine {
 
-    /**
+
+	/**
      * From the input `word`, produces/generates a copy which has the same
      * letters, but in different ordering.
      *
@@ -23,7 +31,29 @@ public class JumbleEngine {
          * Refer to the method's Javadoc (above) and implement accordingly.
          * Must pass the corresponding unit tests.
          */
-        throw new UnsupportedOperationException("to be implemented");
+    	try {
+            if (word == null || word.isEmpty()) {
+                return word;
+            }
+
+            List<Character> characters = new ArrayList<>();
+            for (char c : word.toCharArray()) {
+                characters.add(c);
+            }
+            Collections.shuffle(characters);
+
+            StringBuilder scrambledWord = new StringBuilder();
+            for (char c : characters) {
+                scrambledWord.append(c);
+            }
+            
+            return scrambledWord.toString();
+        } catch (Exception e) {
+        	throw new Error(e);
+        }
+
+        
+    
     }
 
     /**
@@ -48,7 +78,30 @@ public class JumbleEngine {
          * Refer to the method's Javadoc (above) and implement accordingly.
          * Must pass the corresponding unit tests.
          */
-        throw new UnsupportedOperationException("to be implemented");
+		List<String> palindromes = new ArrayList<>();
+        try (InputStream is = getClass().getResourceAsStream("/words.txt");
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            palindromes = reader.lines()
+                    .filter(word -> word.length() > 1 && isPalindrome(word))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return palindromes;
+    	
+    }
+    
+    private boolean isPalindrome(String word) {
+        int left = 0;
+        int right = word.length() - 1;
+        while (left < right) {
+            if (word.charAt(left) != word.charAt(right)) {
+                return false;
+            }
+            left++;
+            right--;
+        }
+        return true;
     }
 
     /**
@@ -68,7 +121,37 @@ public class JumbleEngine {
          * Refer to the method's Javadoc (above) and implement accordingly.
          * Must pass the corresponding unit tests.
          */
-        throw new UnsupportedOperationException("to be implemented");
+
+    	
+		 List<String> wordsOfGivenLength = new ArrayList<>();
+	     try (InputStream is = getClass().getResourceAsStream("/words.txt");
+	          BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+
+	         wordsOfGivenLength = reader.lines()
+	                 .filter(word -> word == null || validLength(length, word.length()))
+	                 .collect(Collectors.toList());
+	     } catch (Exception e) {
+	         e.printStackTrace();
+	     }
+	
+	     if (wordsOfGivenLength.isEmpty()) {
+	         return null;
+	     }
+	
+	     Random random = new Random();
+	     return wordsOfGivenLength.get(random.nextInt(wordsOfGivenLength.size()));
+     
+    }
+    
+    public boolean validLength(Integer length, Integer wordlength) {
+    	
+    	if (length == null) {
+    		return true;
+    	}else if (wordlength == length) {
+    		return true;
+    	}
+    	
+    	return false;
     }
 
     /**
@@ -88,7 +171,14 @@ public class JumbleEngine {
          * Refer to the method's Javadoc (above) and implement accordingly.
          * Must pass the corresponding unit tests.
          */
-        throw new UnsupportedOperationException("to be implemented");
+    	
+    	 try (Stream<String> lines = Files.lines(Paths.get(getClass().getResource("/words.txt").toURI()))) {
+    	        return lines.anyMatch(line -> line.equalsIgnoreCase(word));
+    	    } catch (IOException | URISyntaxException e) {
+    	        e.printStackTrace();
+    	        return false;
+    	    }
+    
     }
 
     /**
@@ -112,7 +202,22 @@ public class JumbleEngine {
          * Refer to the method's Javadoc (above) and implement accordingly.
          * Must pass the corresponding unit tests.
          */
-        throw new UnsupportedOperationException("to be implemented");
+
+    	List<String> matchList = new ArrayList<>();    	
+    	try (InputStream is = getClass().getResourceAsStream("/words.txt");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+			  	if (prefix == null || prefix.trim().isEmpty() || !prefix.matches("[a-zA-Z]+")) {
+		            return matchList; 
+		        }
+			  	matchList = reader.lines()
+		                 .filter(word -> word != null && word.toLowerCase().startsWith(prefix.toLowerCase()))
+		                 .collect(Collectors.toList());
+               
+           } catch (Exception e) {
+               e.printStackTrace();
+           }
+        return matchList;
+
     }
 
     /**
@@ -144,7 +249,44 @@ public class JumbleEngine {
          * Refer to the method's Javadoc (above) and implement accordingly.
          * Must pass the corresponding unit tests.
          */
-        throw new UnsupportedOperationException("to be implemented");
+    	List<String> matchList = new ArrayList<>();   
+    	  if (startChar == null && endChar == null && (length == null || length < 1)) {
+
+              return matchList;
+          }
+    	try (InputStream is = getClass().getResourceAsStream("/words.txt");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+
+			  	matchList = reader.lines()
+		                 .filter(word -> validWord(word,startChar,endChar))
+		                 .collect(Collectors.toList());
+			  	if (length != null && length >= 1) {
+	                matchList = matchList.stream()
+	                        .filter(word -> word.length() == length)
+	                        .collect(Collectors.toList());
+		           }
+
+           } catch (Exception e) {
+               e.printStackTrace();
+           }
+    	
+        return matchList;
+ 
+    }
+    
+    public boolean validWord(String word,Character startChar, Character endChar) {
+    	
+    	if (word == null) {
+    		return false;
+    	}
+    	startChar = (startChar != null) ? Character.toLowerCase(startChar) : null;
+    	endChar = (endChar != null) ? Character.toLowerCase(endChar) : null;
+    	
+    	if((startChar != null && word.charAt(0) != startChar) || (endChar != null && word.charAt(word.length()-1) != endChar)) {
+    		return false;
+    	}
+    	
+    	return true;
     }
 
     /**
@@ -175,8 +317,30 @@ public class JumbleEngine {
          * Refer to the method's Javadoc (above) and implement accordingly.
          * Must pass the corresponding unit tests.
          */
-        throw new UnsupportedOperationException("to be implemented");
+    	List<String> subWords = new ArrayList<>();  
+    	
+    	  if (minLength == null) {
+              minLength = 3;
+          }
+
+          if (word == null || minLength < 1 || word.length() < minLength || !word.matches("[a-zA-Z]+")) {
+              return subWords;
+          }
+          generateSubWordsHelper(word, "", minLength, subWords,word.length(), word);
+      return subWords;
     }
+    
+    private void generateSubWordsHelper(String remaining, String current, int minLength, List<String> subWords,int originalLength, String originalWord) {
+        if (current.length() >= minLength && current.length() <= originalLength && !current.equals(originalWord) &&  exists(current) && !subWords.contains(current) ) {
+            subWords.add(current);
+        }
+
+        for (int i = 0; i < remaining.length(); i++) {
+            generateSubWordsHelper(remaining.substring(0, i) + remaining.substring(i + 1),
+                    current + remaining.charAt(i), minLength, subWords, originalLength, originalWord);
+        }
+    }
+      
 
     /**
      * Creates a game state with word to guess, scrambled letters, and

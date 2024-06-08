@@ -7,7 +7,7 @@ import javax.validation.constraints.Size;
 
 public class PrefixForm {
 
-    @NotBlank
+    @NotBlank(message = "must not be blank")
     @Size(min = 1, max = 30)
     private String prefix;
 

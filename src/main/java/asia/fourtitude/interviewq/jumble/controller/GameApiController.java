@@ -1,6 +1,9 @@
 package asia.fourtitude.interviewq.jumble.controller;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -88,6 +91,25 @@ public class GameApiController {
          * a) Store the game state to the repository, with unique game board ID
          * b) Return the game board/state (GameGuessOutput) to caller
          */
+        
+        String gameId = UUID.randomUUID().toString();
+
+        GameGuessModel gameGuessModel = new GameGuessModel();
+        gameGuessModel.setId(gameId);
+        gameGuessModel.setCreatedAt(new Date());
+        gameGuessModel.setModifiedAt(new Date());
+        gameGuessModel.setGameState(gameState);
+
+        this.gameBoards.put(gameId, gameGuessModel);
+
+        output.setResult("Created new game.");
+        output.setId(gameId);
+        output.setOriginalWord(gameState.getOriginal());
+        output.setScrambleWord(gameState.getScramble());
+        output.setTotalWords(gameState.getSubWords().size());
+        output.setRemainingWords(gameState.getSubWords().size());
+        output.setGuessedWords(new ArrayList<>());
+
 
         return new ResponseEntity<>(output, HttpStatus.OK);
     }

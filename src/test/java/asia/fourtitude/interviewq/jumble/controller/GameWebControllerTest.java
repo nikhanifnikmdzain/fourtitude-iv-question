@@ -34,7 +34,7 @@ class GameWebControllerTest {
         this.mockMvc.perform(get("/game/goodbye"))
                 .andDo(print())
                 .andExpect(view().name("game/board"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk()); 
     }
 
     @Test

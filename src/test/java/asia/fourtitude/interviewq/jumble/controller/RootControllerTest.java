@@ -300,7 +300,7 @@ class RootControllerTest {
     void givenInvalidLength_whenExecSearch_thenFailure() throws Exception {
         this.mockMvc.perform(post("/search")
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .param("length", "a"))
+                        .param("length", "a")) 
                 .andExpect(view().name("search"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("<label id=\"iptLengthFeedback\" class=\"col-sm-4 text-danger is-invalid\">Failed to convert property value of type java.lang.String to required type java.lang.Integer for property length; nested exception is java.lang.NumberFormatException: For input string: &quot;a&quot;</label>")));

@@ -7,7 +7,7 @@ import javax.validation.constraints.Size;
 
 public class SubWordsForm {
 
-    @NotBlank
+    @NotBlank(message = "must not be blank")
     @Size(min = 3, max = 30)
     private String word;
 

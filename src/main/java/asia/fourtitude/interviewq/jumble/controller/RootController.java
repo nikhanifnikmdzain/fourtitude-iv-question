@@ -1,6 +1,9 @@
 package asia.fourtitude.interviewq.jumble.controller;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
+
+import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,7 +51,7 @@ public class RootController {
 
     @PostMapping("scramble")
     public String doPostScramble(
-            @ModelAttribute(name = "form") ScrambleForm form,
+            @Valid @ModelAttribute(name = "form") ScrambleForm form,
             BindingResult bindingResult, Model model) {
         /*
          * TODO:
@@ -56,7 +60,14 @@ public class RootController {
          * c) Presentation page to show the result
          * d) Must pass the corresponding unit tests
          */
+    	
+    	   if (bindingResult.hasErrors()) {
+               return "scramble";
+           }
 
+           String scrambledText = jumbleEngine.scramble(form.getWord());
+
+           form.setScramble(scrambledText);
         return "scramble";
     }
 
@@ -74,7 +85,7 @@ public class RootController {
 
     @PostMapping("exists")
     public String doPostExists(
-            @ModelAttribute(name = "form") ExistsForm form,
+            @Valid @ModelAttribute(name = "form") ExistsForm form,
             BindingResult bindingResult, Model model) {
         /*
          * TODO:
@@ -83,8 +94,22 @@ public class RootController {
          * c) Presentation page to show the result
          * d) Must pass the corresponding unit tests
          */
+    	  if (bindingResult.hasErrors()) {
+              return "exists";
+          }
 
-        return "exists";
+    	  String trimmedWord = form.getWord().trim();
+          boolean exists = jumbleEngine.exists(trimmedWord);
+
+          form.setExists(exists);
+          
+          if (exists) {
+        	  form.setWord(form.getWord());
+          } else {
+        	  form.setWord(form.getWord());
+          }
+          
+		return "exists";
     }
 
     @GetMapping("prefix")
@@ -95,7 +120,7 @@ public class RootController {
 
     @PostMapping("prefix")
     public String doPostPrefix(
-            @ModelAttribute(name = "form") PrefixForm form,
+            @Valid @ModelAttribute(name = "form") PrefixForm form,
             BindingResult bindingResult, Model model) {
         /*
          * TODO:
@@ -104,6 +129,15 @@ public class RootController {
          * c) Presentation page to show the result
          * d) Must pass the corresponding unit tests
          */
+    	
+    	  if (bindingResult.hasErrors()) {
+              return "prefix";
+          }
+    	  
+    	  String trimmedWord = form.getPrefix().trim();
+    	  Collection<String> words = jumbleEngine.wordsMatchingPrefix(trimmedWord);
+
+          form.setWords(words);
 
         return "prefix";
     }
@@ -116,7 +150,7 @@ public class RootController {
 
     @PostMapping("search")
     public String doPostSearch(
-            @ModelAttribute(name = "form") SearchForm form,
+            @Valid @ModelAttribute(name = "form") SearchForm form,
             BindingResult bindingResult, Model model) {
         /*
          * TODO:
@@ -126,6 +160,39 @@ public class RootController {
          * d) Presentation page to show the result
          * e) Must pass the corresponding unit tests
          */
+    	if (bindingResult.hasFieldErrors("length")) {
+    		FieldError lengthError = bindingResult.getFieldError("length");
+    		model.addAttribute("length",lengthError);
+    		return "search";
+    	}
+    	if ((form.getStartChar() == null || form.getStartChar().isEmpty()) && 
+   			 (form.getEndChar() == null || form.getEndChar().isEmpty()) &&
+   			 (form.getLength() == null || form.getLength() <= 0)) {
+            bindingResult.addError(new FieldError("form", "startChar", "Invalid startChar"));
+            bindingResult.addError(new FieldError("form", "endChar", "Invalid endChar"));
+            bindingResult.addError(new FieldError("form", "length", "Invalid length"));
+
+        }
+    	 if (bindingResult.hasErrors()) {
+    		 
+	        if (bindingResult.hasFieldErrors("startChar")) {
+	            FieldError startCharError = bindingResult.getFieldError("startChar");
+	            model.addAttribute("startChar",startCharError);
+	        }
+	        if (bindingResult.hasFieldErrors("endChar")) {
+	            FieldError endCharError = bindingResult.getFieldError("endChar");
+	            model.addAttribute("endChar",endCharError);
+	        }
+	        return "search";
+	    }
+         
+         
+    	 char startChar = form.getStartChar() != null && !form.getStartChar().isEmpty() ? form.getStartChar().charAt(0) : '\0';
+         char endChar = form.getEndChar() != null && !form.getEndChar().isEmpty() ? form.getEndChar().charAt(0) : '\0';
+         Integer length =  form.getLength() != null && form.getLength() !=0 ?  form.getLength() : 1;;
+
+         Collection<String> words = jumbleEngine.searchWords(startChar, endChar, length);
+         form.setWords(words);
 
         return "search";
     }
@@ -138,7 +205,7 @@ public class RootController {
 
     @PostMapping("subWords")
     public String doPostSubWords(
-            @ModelAttribute(name = "form") SubWordsForm form,
+            @Valid @ModelAttribute(name = "form") SubWordsForm form,
             BindingResult bindingResult, Model model) {
         /*
          * TODO:
@@ -147,7 +214,25 @@ public class RootController {
          * c) Presentation page to show the result
          * d) Must pass the corresponding unit tests
          */
+    	
+    	 if (bindingResult.hasErrors()) {
 
+             if (bindingResult.hasFieldErrors("word")) {
+            	 form.setWord("Invalid word");
+             }
+             if (bindingResult.hasFieldErrors("minLength")) {
+                 model.addAttribute("minLength", "Invalid minLength");
+             }
+             return "subWords";
+         }
+
+    	 
+    	 String word = form.getWord().trim();
+         Integer minLength = form.getMinLength() != null && form.getMinLength() > 0 ? form.getMinLength() : 3;
+
+         // Call JumbleEngine#generateSubWords() with the validated input
+         Collection<String> words = jumbleEngine.generateSubWords(word, minLength);
+         form.setWords(words);
         return "subWords";
     }
 

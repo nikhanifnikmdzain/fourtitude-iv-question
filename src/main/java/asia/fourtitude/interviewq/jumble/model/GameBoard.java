@@ -1,11 +1,14 @@
 package asia.fourtitude.interviewq.jumble.model;
 
+import javax.validation.constraints.NotBlank;
+
 import asia.fourtitude.interviewq.jumble.core.GameState;
 
 public class GameBoard {
 
     private GameState state;
-
+    
+    @NotBlank(message = "must not be blank")
     private String word;
 
     public GameState getState() {
@@ -17,7 +20,7 @@ public class GameBoard {
     }
 
     public String getWord() {
-        return word;
+        return word; 
     }
 
     public void setWord(String word) {

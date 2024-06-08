@@ -1,11 +1,14 @@
 package asia.fourtitude.interviewq.jumble.controller;
 
+import javax.validation.Valid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -73,7 +76,10 @@ public class GameWebController {
          *        game `board` (session attribute)
          * b) Presentation page to show the information of game board/state
          * c) Must pass the corresponding unit tests
-         */
+         */ 
+        
+        board.setState(state);
+        board.setWord("");  
 
         return "game/board";
     }
@@ -87,14 +93,36 @@ public class GameWebController {
 
     @PostMapping("/play")
     public String doPostPlay(
-            @ModelAttribute(name = "board") GameBoard board,
+            @Valid @ModelAttribute(name = "board") GameBoard board,
             BindingResult bindingResult, Model model) {
-        if (board == null || board.getState() == null) {
+    	if (board == null || board.getState() == null) {
             // session expired
             return "game/board";
         }
 
-        scrambleWord(board);
+        // Retrieve the guessed word from the request parameter
+        String guessedWord = board.getWord().trim();
+
+        // Validate if the guessed word is empty and return an error if so
+        if (guessedWord.isEmpty()) {
+            bindingResult.rejectValue("word", "error.word", "Word cannot be empty");
+            return "game/board";
+        }
+
+        // Update the game state with the guessed word
+        boolean correct = board.getState().updateGuessWord(guessedWord);
+
+        // Add a message to the model based on whether the guess is correct
+        if (!correct) {
+            bindingResult.rejectValue("word", "error.word", "Guessed incorrectly");
+        }
+
+        // Check if all sub-words have been guessed and add appropriate message
+        if (board.getState().getGuessedWords().size() == board.getState().getSubWords().size()) {
+            model.addAttribute("message", "<p>Click <a href=\"/game/new\">here</a> to start game.</p>");
+        } else {
+            model.addAttribute("remainingWords", "Remaining words: " + (board.getState().getSubWords().size() - board.getState().getGuessedWords().size()));
+        }
 
         /*
          * TODO:
